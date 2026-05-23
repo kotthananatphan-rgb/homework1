@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Streaming Single-Page Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #f5f0e8;
+            --surface: #fdfaf4;
+            --surface2: #f0ebe0;
+            --surface3: #e8e0d2;
+            --border: rgba(160,130,90,0.15);
+            --border-accent: rgba(230,100,60,0.25);
+            --accent: #e8622a;
+            --accent2: #f59e5a;
+            --accent-glow: rgba(232,98,42,0.08);
+            --green: #2da86e;
+            --green-glow: rgba(45,168,110,0.12);
+            --red: #d94040;
+            --text-1: #2a1f0f;
+            --text-2: #7a6248;
+            --text-3: #b09878;
+            --radius: 16px;
+            --radius-sm: 10px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text-1);
+            font-family: 'DM Sans', sans-serif;
+            min-height: 100vh;
+            font-size: 14px;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -200px;
+            left: -100px;
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, rgba(232,98,42,0.09) 0%, transparent 75%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -150px;
+            right: -100px;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(45,168,110,0.08) 0%, transparent 75%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .page-wrap {
+            position: relative;
+            z-index: 1;
+            max-width: 1140px;
+            margin: 0 auto;
+            padding: 50px 24px 100px;
+        }
+
+        /* ─── HEADER ─── */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 48px;
+            padding-bottom: 32px;
+            border-bottom: 1px solid var(--border);
+        }
+        @media (max-width: 850px) {
+            .header { flex-direction: column; align-items: flex-start; gap: 16px; }
+        }
+        .logo-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 8px;
+        }
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 4px 12px rgba(232,98,42,0.2);
+        }
+        h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(90deg, var(--text-1) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .header-subtitle {
+            color: var(--text-2);
+            font-size: 13px;
+            font-weight: 400;
+            max-width: 600px;
+            line-height: 1.6;
+        }
+        .db-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            padding: 8px 16px;
+            font-size: 12px;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 500;
+            color: var(--text-2);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            white-space: nowrap;
+        }
+        .db-dot {
+            width: 8px; height: 8px;
+            background: var(--green);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--green);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.9); }
+        }
+
+        /* ─── LAYOUT GRID ─── */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 32px;
+            align-items: start;
+        }
+        @media (max-width: 850px) {
+            .main-grid { grid-template-columns: 1fr; gap: 24px; }
+        }
+
+        /* ─── SIDEBAR ─── */
+        .sidebar {
+            position: sticky;
+            top: 32px;
+        }
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: 0 4px 20px rgba(160,130,90,0.04), 0 1px 3px rgba(0,0,0,0.01);
+            overflow: hidden;
+            transition: var(--transition);
+        }
+        .card:hover {
+            box-shadow: 0 12px 32px rgba(160,130,90,0.08);
+        }
+        .card-header {
+            padding: 24px 24px 0;
+        }
+        .card-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 6px;
+        }
+        .card-title-icon {
+            width: 28px; height: 28px;
+            background: var(--accent-glow);
+            border: 1px solid var(--border-accent);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px;
+            color: var(--accent);
+        }
+        .card-desc {
+            color: var(--text-2);
+            font-size: 12px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .form-body { padding: 0 24px 24px; }
+        .form-group { margin-bottom: 16px; }
+        .form-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-2);
+            margin-bottom: 8px;
+        }
+        .form-input {
+            width: 100%;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 11px 14px;
+            color: var(--text-1);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13.5px;
+            outline: none;
+            transition: var(--transition);
+        }
+        .form-input::placeholder { color: var(--text-3); }
+        .form-input:focus {
+            background: var(--surface);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(232,98,42,0.1);
+        }
+        .form-hint {
+            font-size: 11px;
+            color: var(--text-3);
+            margin-top: 6px;
+            font-style: italic;
+        }
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(135deg, var(--accent) 0%, #c94a18 100%);
+            border: none;
+            border-radius: var(--radius-sm);
+            padding: 13px;
+            color: #fff;
+            font-family: 'Syne', sans-serif;
+            font-size: 13.5px;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 14px rgba(232,98,42,0.25);
+            margin-top: 8px;
+        }
+        .btn-submit:hover { 
+            opacity: 0.92; 
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(232,98,42,0.35); 
+        }
+        .btn-submit:active { transform: translateY(1px); }
+
+        .sidebar-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 0 24px;
+        }
+
+        /* ─── MAIN CONTENT ─── */
+        .table-card .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        .table-card .card-header .card-title { margin-bottom: 0; }
+        .btn-refresh {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 6px 14px;
+            color: var(--text-2);
+            font-size: 12.5px;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .btn-refresh:hover { 
+            background: var(--surface3); 
+            color: var(--text-1);
+            transform: translateY(-1px);
+        }
+        .btn-refresh:active { transform: translateY(1px); }
+        .btn-refresh svg { width: 13px; height: 13px; }
+
+        /* ─── TABLE ─── */
+        .table-wrap { overflow-x: auto; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        thead tr th {
+            padding: 16px 20px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-2);
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+            background: rgba(160,130,90,0.02);
+        }
+        tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: var(--transition);
+        }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: rgba(232,98,42,0.03); }
+        tbody td {
+            padding: 16px 20px;
+            vertical-align: middle;
+        }
+        .td-id {
+            font-family: 'DM Mono', 'Courier New', monospace;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-3);
+        }
+        .song-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .song-avatar {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--surface2), rgba(232,98,42,0.08));
+            border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 15px;
+            flex-shrink: 0;
+            transition: var(--transition);
+        }
+        tbody tr:hover .song-avatar {
+            transform: scale(1.05);
+            background: var(--accent-glow);
+            border-color: var(--border-accent);
+        }
+        .song-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-1);
+        }
+        .duration-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-family: 'DM Mono', 'Courier New', monospace;
+            color: var(--text-2);
+        }
+        .album-name {
+            color: var(--accent);
+            font-size: 13.5px;
+            font-weight: 500;
+        }
+        .artist-name {
+            color: var(--text-2);
+            font-size: 13px;
+            font-weight: 400;
+        }
+        .btn-delete {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: transparent;
+            border: 1px solid rgba(217,64,64,0.15);
+            border-radius: 8px;
+            padding: 6px 12px;
+            color: var(--red);
+            font-size: 12px;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .btn-delete:hover {
+            background: rgba(217,64,64,0.06);
+            border-color: rgba(217,64,64,0.4);
+            transform: translateY(-1px);
+        }
+        .btn-delete:active { transform: translateY(1px); }
+        .btn-delete svg { width: 12px; height: 12px; }
+
+        .empty-state {
+            padding: 70px 24px;
+            text-align: center;
+            color: var(--text-2);
+        }
+        .empty-state-icon { font-size: 36px; margin-bottom: 14px; opacity: 0.7; }
+        .empty-state p { font-size: 14px; line-height: 1.6; }
+
+        .loading-row td {
+            padding: 60px 24px;
+            text-align: center;
+            color: var(--text-3);
+            font-size: 13px;
+        }
+        .loading-dots span {
+            display: inline-block;
+            width: 6px; height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            margin: 0 3px;
+            animation: blink 1.2s infinite;
+        }
+        .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes blink {
+            0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+            40% { opacity: 1; transform: scale(1.1); }
+        }
+
+        /* ─── FOOTER STATS BAR ─── */
+        .stats-bar {
+            display: flex;
+            gap: 16px;
+            padding: 16px 24px;
+            background: var(--surface2);
+            border-top: 1px solid var(--border);
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-2);
+        }
+        .stats-item { display: flex; align-items: center; gap: 6px; }
+        .stats-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+        /* ─── TOAST ─── */
+        #toast {
+            position: fixed;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%) translateY(24px);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            padding: 12px 24px;
+            font-size: 13.5px;
+            font-weight: 500;
+            color: var(--text-1);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+            z-index: 100;
+            white-space: nowrap;
+            box-shadow: 0 10px 30px rgba(80,50,20,0.12);
+        }
+        #toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        #toast.success { border-color: rgba(45,168,110,0.4); color: var(--green); background: #f4fbf7; }
+        #toast.error { border-color: rgba(217,64,64,0.3); color: var(--red); background: #fff5f5; }
+    </style>
+</head>
+<body>
+
+<div class="page-wrap">
+
+    <div class="header">
+        <div class="header-left">
+            <div class="logo-row">
+                <div class="logo-icon">🎵</div>
+                <h1>Music Streaming Dashboard</h1>
+            </div>
+            <p class="header-subtitle">ระบบบริหารจัดการและแสดงผลข้อมูลเว็บมิวสิกสตรีมมิ่งแบบ Single-Page ออกแบบโครงสร้างฐานข้อมูลเชิงสัมพันธ์ด้วยสถาปัตยกรรมแบบข้ามตาราง (Relational SQL JOIN) พร้อมฟังก์ชันควบคุมข้อมูลแบบครบวงจร (CRUD Operations)</p>
+        </div>
+        <div class="db-badge">
+            <span class="db-dot"></span>
+            SQLite Engine Connected
+        </div>
+    </div>
+
+    <div class="main-grid">
+
+        <div class="sidebar">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <div class="card-title-icon">✦</div>
+                        เพิ่มเพลงใหม่
+                    </div>
+                    <p class="card-desc">กรอกข้อมูลเพื่อบันทึกรายการเพลงใหม่เข้าสู่ระบบฐานข้อมูลหลักในแบบ Real-time</p>
+                </div>
+                <div class="sidebar-divider"></div>
+                <div class="form-body">
+                    <form id="add-song-form">
+                        <div class="form-group" style="margin-top:18px">
+                            <label class="form-label">ชื่อเพลง (Title)</label>
+                            <input type="text" id="title" required class="form-input" placeholder="เช่น ฝนตกไหม">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">ความยาวเพลง (Duration)</label>
+                            <input type="text" id="duration" required class="form-input" placeholder="เช่น 03:45">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">รหัสอัลบั้ม (Album ID)</label>
+                            <input type="number" id="album_id" required class="form-input" placeholder="ใส่ตัวเลขไอดี เช่น 1">
+                            <p class="form-hint">* ข้อมูลคีย์นอก (FK) ต้องตรงกับ ID ที่มีอยู่จริงในตาราง albums</p>
+                        </div>
+                        <button type="submit" class="btn-submit">
+                            💾 บันทึกลงฐานข้อมูล
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-card card">
+            <div class="card-header" style="padding: 22px 24px 18px;">
+                <div class="card-title" style="margin-bottom:0">
+                    <div class="card-title-icon">◈</div>
+                    รายการข้อมูลบทเพลงทั้งหมด <span style="color:var(--text-3);font-family:'DM Sans',sans-serif;font-weight:400;font-size:12.5px;margin-left:4px;">(Relational JOIN Query)</span>
+                </div>
+                <button onclick="loadDashboardData()" class="btn-refresh">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+                    เรียกดูข้อมูลใหม่
+                </button>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>ชื่อเพลง</th>
+                            <th>ความยาว</th>
+                            <th>อัลบั้ม</th>
+                            <th>ศิลปิน</th>
+                            <th style="text-align:center">จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="song-table-body">
+                        <tr class="loading-row">
+                            <td colspan="6">
+                                <div class="loading-dots">
+                                    <span></span><span></span><span></span>
+                                </div>
+                                <div style="margin-top:8px;font-size:12px;">กำลังสร้างการเชื่อมต่อและดึงข้อมูลจากโครงสร้าง SQLite…</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="stats-bar" id="stats-bar" style="display:none">
+                <span class="stats-item">
+                    <span class="stats-dot" style="background:var(--accent)"></span>
+                    <span id="stats-count">0 เพลง</span>
+                </span>
+                <span class="stats-item" style="color:var(--text-3)">·</span>
+                <span class="stats-item">โครงสร้างประมวลผลผ่านคำสั่งภายในตาราง: songs ⨝ albums ⨝ artists</span>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+    const API_BASE_URL = 'http://localhost:5000/api';
+
+    function showToast(msg, type = 'success') {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = 'show ' + type;
+        setTimeout(() => { t.className = ''; }, 3000);
+    }
+
+    const songEmojis = ['🎵','🎶','🎸','🎹','🎺','🎻','🥁','🎷'];
+    function songIcon(id) { return songEmojis[id % songEmojis.length]; }
+
+    async function loadDashboardData() {
+        const tbody = document.getElementById('song-table-body');
+        tbody.innerHTML = `
+            <tr class="loading-row">
+                <td colspan="6">
+                    <div class="loading-dots"><span></span><span></span><span></span></div>
+                    <div style="margin-top:8px;font-size:12px;color:var(--text-3)">กำลังอัปเดตข้อมูลล่าสุด…</div>
+                </td>
+            </tr>`;
+        document.getElementById('stats-bar').style.display = 'none';
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/dashboard`);
+            const songs = await res.json();
+            tbody.innerHTML = '';
+
+            if (!songs.length) {
+                tbody.innerHTML = `
+                    <tr><td colspan="6">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🎵</div>
+                            <p>ไม่พบชุดข้อมูลบทเพลงในระบบ<br>กรุณาเพิ่มข้อมูลนำเข้าชิ้นแรกผ่านระบบฟอร์มด้านซ้ายมือ</p>
+                        </div>
+                    </td></tr>`;
+                return;
+            }
+
+            songs.forEach(song => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="td-id">${song.id}</td>
+                        <td>
+                            <div class="song-cell">
+                                <div class="song-avatar">${songIcon(song.id)}</div>
+                                <span class="song-title">${song.title}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="duration-badge">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                ${song.duration}
+                            </div>
+                        </td>
+                        <td><span class="album-name">${song.album_title || '<span style="color:var(--text-3)">ไม่มีอัลบั้ม (ID: '+song.album_id+')</span>'}</span></td>
+                        <td><span class="artist-name">${song.artist_name || '<span style="color:var(--text-3)">ไม่ระบุ</span>'}</span></td>
+                        <td style="text-align:center">
+                            <button onclick="deleteSong(${song.id})" class="btn-delete">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                                ลบข้อมูล
+                            </button>
+                        </td>
+                    </tr>`;
+            });
+
+            const statsBar = document.getElementById('stats-bar');
+            statsBar.style.display = 'flex';
+            document.getElementById('stats-count').textContent = songs.length + ' รายการ';
+
+        } catch (err) {
+            tbody.innerHTML = `
+                <tr><td colspan="6">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚠️</div>
+                        <p>ดึงข้อมูลล้มเหลว — ไม่สามารถเชื่อมต่อกับ Rest API Backend ได้<br>กรุณาตรวจสอบการเปิดใช้งานระบบเว็บเซิร์ฟเวอร์หลัก</p>
+                    </div>
+                </td></tr>`;
+        }
+    }
+
+    document.getElementById('add-song-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const title = document.getElementById('title').value;
+        const duration = document.getElementById('duration').value;
+        const album_id = parseInt(document.getElementById('album_id').value);
+        const btn = e.target.querySelector('.btn-submit');
+        btn.disabled = true;
+        btn.textContent = 'กำลังทำการบันทึกข้อมูล…';
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/songs`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, duration, album_id })
+            });
+            if (res.ok) {
+                showToast('🎉 บันทึกข้อมูลลงฐานข้อมูล SQLite สำเร็จ!', 'success');
+                e.target.reset();
+                loadDashboardData();
+            } else {
+                showToast('❌ ข้อผิดพลาด — ข้อมูลคีย์ต่างประเทศ (Foreign Key) ไม่ถูกต้อง', 'error');
+            }
+        } catch (err) {
+            showToast('❌ เกิดข้อผิดพลาดทางเทคนิคในการสื่อสารกับเซิร์ฟเวอร์', 'error');
+        }
+
+        btn.disabled = false;
+        btn.textContent = '💾 บันทึกลงฐานข้อมูล';
+    });
+
+    async function deleteSong(id) {
+        if (!confirm(`ยืนยันการลบข้อมูลเพลงรหัสระบุพิกัดที่ ${id} ออกจากระบบฐานข้อมูลจริงหรือไม่?`)) return;
+        try {
+            const res = await fetch(`${API_BASE_URL}/songs/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                showToast('🗑️ ลบข้อมูลออกจากฐานข้อมูลเสร็จสิ้น', 'success');
+                loadDashboardData();
+            } else {
+                showToast('❌ ไม่สามารถดำเนินการลบชุดข้อมูลได้', 'error');
+            }
+        } catch (err) {
+            showToast('❌ เกิดข้อผิดพลาดในการรับส่งข้อมูลคำสั่ง', 'error');
+        }
+    }
+
+    window.onload = loadDashboardData;
+</script>
+</body>
+</html>
